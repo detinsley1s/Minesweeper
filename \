@@ -1,3 +1,4 @@
+import pygame
 import random
 import sge
 
@@ -19,8 +20,11 @@ board_cell_statuses = []
 for i in range(GRID_HEIGHT):
     board_cell_statuses.append([cell_status['unclicked']]*GRID_WIDTH)
 
+left_button_clicked = False
 
 class Game(sge.dsp.Game):
+
+    right_button_clicked = False
 
     def event_key_press(self, key, char):
         if key == 'escape':
@@ -29,17 +33,36 @@ class Game(sge.dsp.Game):
     def event_close(self):
         self.end()
 
-    def event_mouse_button_release(self, button):
-        
-        # x, y are switched because Cartesian coords are different from list coords    
+    def event_step(self, time_passed, delta_mult):
         mouse_x_loc = int(sge.mouse.get_y() // TILE_SIDE_DIM)
         mouse_y_loc = int(sge.mouse.get_x() // TILE_SIDE_DIM)
+        self.project_sprite(unclicked_tile_sprite, 0, mouse_x_loc, mouse_y_loc)
 
-        if 0 <= mouse_y_loc < GRID_WIDTH and 0 <= mouse_x_loc < GRID_HEIGHT:
+    def event_mouse_button_release(self, button):
+        global left_button_clicked
+        
+        if left_button_clicked:
+            print('iiiiiiiiiiiiiii')
+            mouse_x_loc = int(sge.mouse.get_y() // TILE_SIDE_DIM)
+            mouse_y_loc = int(sge.mouse.get_x() // TILE_SIDE_DIM)
+        # if 0 <= mouse_x_loc < GRID_WIDTH and 0 <= mouse_y_loc < GRID_HEIGHT:
+        #    if Game.event_mouse_button_release(self, button) == 'left':# and (board_cell_statuses[mouse_x_loc][mouse_y_loc] ==
+        #        cell_status['unclicked'] or board_cell_statuses[mouse_x_loc][mouse_y_loc] == cell_status['flagged']):
+        #        Sprite.draw_sprite(clicked_tile_sprite, unclicked_tile_sprite, mouse_x_loc, mouse_y_loc)
+        #        print('inside')
             if button == 'left':
+            #unclicked_tile_sprite.draw_rectangle(0, 0, unclicked_tile_sprite.width, unclicked_tile_sprite.height, outline=sge.gfx.Color("black"), fill=sge.gfx.Color("blue"))
+            #tiles[mouse_y_loc][mouse_x_loc] = Tile(mouse_x_loc*TILE_SIDE_DIM, mouse_y_loc*TILE_SIDE_DIM)
                 board_cell_statuses[mouse_x_loc][mouse_y_loc] = 1
-                tiles[mouse_x_loc*GRID_HEIGHT + mouse_y_loc] = Tile(mouse_y_loc*TILE_SIDE_DIM,
-                    mouse_x_loc*TILE_SIDE_DIM)
+                #print('left')
+                #print(board_cell_statuses)
+                unclicked_tile_sprite.draw_clear()
+                for sprite in tiles:
+                    print(sprite)
+                #unclicked_tile_sprite.draw_rectangle(0, 0, unclicked_tile_sprite.width, unclicked_tile_sprite.height, outline=sge.gfx.Color("black"), fill=sge.gfx.Color("red"))
+                #unclicked_tile_sprite.draw_rectangle(0, 0, unclicked_tile_sprite.width, unclicked_tile_sprite.height, outline=sge.gfx.Color("black"), fill=sge.gfx.Color("red"))
+                left_button_clicked = False
+        left_button_clicked = True
 
 
 class Room(sge.dsp.Room):
@@ -51,14 +74,27 @@ class Room(sge.dsp.Room):
             color=sge.gfx.Color("black"), halign="center", valign="middle")
         sge.game.project_text(mines_left_font, str(mines_left), WINDOW_WIDTH - 100, 250,
             color=sge.gfx.Color("black"), halign="center", valign="middle")
+        #print(int(sge.mouse.get_x() // TILE_SIDE_DIM))
+        #print(int(sge.mouse.get_y() // TILE_SIDE_DIM))
 
-        for tile in tiles:
-            sge.game.project_sprite(tile.sprite, 0, tile.x, tile.y)
+
+        # x, y are switched because Cartesian coords are different from list coords
+        mouse_x_loc = int(sge.mouse.get_y() // TILE_SIDE_DIM)
+        mouse_y_loc = int(sge.mouse.get_x() // TILE_SIDE_DIM)
+        #print(mouse_x_loc, mouse_y_loc)
+        #print(sge.input.MouseButtonRelease('left'))
+        #if 0 <= mouse_x_loc < GRID_WIDTH and 0 <= mouse_y_loc < GRID_HEIGHT:
+        #    if Game.event_mouse_button_release(self, button) == 'left':# and (board_cell_statuses[mouse_x_loc][mouse_y_loc] ==
+#                cell_status['unclicked'] or board_cell_statuses[mouse_x_loc][mouse_y_loc] == cell_status['flagged']):
+                #Sprite.draw_sprite(clicked_tile_sprite, unclicked_tile_sprite, mouse_x_loc, mouse_y_loc)
+         #       print('inside')
 
 
 class Tile(sge.dsp.Object):
 
     def __init__(self, x, y):
+        #print('inside')
+        print(board_cell_statuses)
         if board_cell_statuses[y//TILE_SIDE_DIM][x//TILE_SIDE_DIM] == cell_status['unclicked']:
             super().__init__(x, y, sprite=unclicked_tile_sprite)
         elif board_cell_statuses[y//TILE_SIDE_DIM][x//TILE_SIDE_DIM] == cell_status['clicked']:
@@ -111,6 +147,7 @@ def generate_hidden_cells():
                    mine_board[i][j-1] += 1
                if j + 1 <= GRID_WIDTH - 1 and mine_board[i][j+1] != 'M':
                    mine_board[i][j+1] += 1
+    #print(mine_board)
     return mine_board
 
 
@@ -128,15 +165,20 @@ background = sge.gfx.Background([], sge.gfx.Color("white"))
 
 # generate the tiles for drawing at beginning of game
 tiles = generate_tiles()
-
 # Make initial hidden state of board
 mine_board = generate_hidden_cells()
+
+
+
+objects = [*tiles]
 
 description_font = sge.gfx.Font(size=36, underline=True)
 mines_left_font = sge.gfx.Font(size=60)
 
-sge.game.start_room = Room([], background=background)
+
+sge.game.start_room = Room(objects, background=background)
 
 sge.game.mouse.visible = True
+
 
 sge.game.start()
