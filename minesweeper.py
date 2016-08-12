@@ -8,7 +8,7 @@ GRID_WIDTH = 20
 GRID_HEIGHT = 20
 TILE_SIDE_DIM = WINDOW_HEIGHT // GRID_HEIGHT
 
-mines_left = int(GRID_WIDTH * GRID_HEIGHT * 0.2)
+mines_left = int(GRID_WIDTH * GRID_HEIGHT * 0.15)
 
 
 class Game(sge.dsp.Game):
