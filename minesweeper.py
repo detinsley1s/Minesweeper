@@ -29,6 +29,7 @@ class Tile(sge.dsp.Object):
 
 
 def generate_tiles():
+    """Draws the minesweeper grid"""
     table = []
     for i in range(GRID_WIDTH):
         for j in range(GRID_HEIGHT):
@@ -40,7 +41,8 @@ Game(width=WINDOW_WIDTH, height=WINDOW_HEIGHT, window_text='Minesweeper by Dan T
     collision_events_enabled=False)
 
 tile_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
-tile_sprite.draw_rectangle(0, 0, tile_sprite.width, tile_sprite.height, outline=sge.gfx.Color("black"))
+tile_sprite.draw_rectangle(0, 0, tile_sprite.width, tile_sprite.height, outline=sge.gfx.Color("black"),
+    fill=sge.gfx.Color("red"))
 
 background = sge.gfx.Background([], sge.gfx.Color("white"))
 
