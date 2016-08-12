@@ -36,8 +36,19 @@ class Game(sge.dsp.Game):
         mouse_y_loc = int(sge.mouse.get_x() // TILE_SIDE_DIM)
 
         if 0 <= mouse_y_loc < GRID_WIDTH and 0 <= mouse_x_loc < GRID_HEIGHT:
-            if button == 'left':
+            
+            # left button is for clicking the cell
+            # right button is for flagging the cell
+            if button == 'left' and board_cell_statuses[mouse_x_loc][mouse_y_loc] != 1:
                 board_cell_statuses[mouse_x_loc][mouse_y_loc] = 1
+                make_new_cell = True
+            elif button == 'right' and board_cell_statuses[mouse_x_loc][mouse_y_loc] == 0:
+                board_cell_statuses[mouse_x_loc][mouse_y_loc] = 2
+                make_new_cell = True
+            else:
+                make_new_cell = False
+            
+            if make_new_cell:
                 tiles[mouse_x_loc*GRID_HEIGHT + mouse_y_loc] = Tile(mouse_y_loc*TILE_SIDE_DIM,
                     mouse_x_loc*TILE_SIDE_DIM)
 
@@ -45,6 +56,8 @@ class Game(sge.dsp.Game):
 class Room(sge.dsp.Room):
 
     def event_step(self, time_passed, delta_mult):
+
+        # display the text
         sge.game.project_text(description_font, "Mines", WINDOW_WIDTH - 100, 150,
             color=sge.gfx.Color("black"), halign="center", valign="middle")
         sge.game.project_text(description_font, "Remaining", WINDOW_WIDTH - 100, 190,
@@ -52,6 +65,7 @@ class Room(sge.dsp.Room):
         sge.game.project_text(mines_left_font, str(mines_left), WINDOW_WIDTH - 100, 250,
             color=sge.gfx.Color("black"), halign="center", valign="middle")
 
+        # draw the tiles
         for tile in tiles:
             sge.game.project_sprite(tile.sprite, 0, tile.x, tile.y)
 
@@ -63,6 +77,8 @@ class Tile(sge.dsp.Object):
             super().__init__(x, y, sprite=unclicked_tile_sprite)
         elif board_cell_statuses[y//TILE_SIDE_DIM][x//TILE_SIDE_DIM] == cell_status['clicked']:
             super().__init__(x, y, sprite=clicked_tile_sprite)
+        else:
+            super().__init__(x, y, sprite=flagged_tile_sprite)
 
 
 def generate_tiles():
@@ -117,12 +133,17 @@ def generate_hidden_cells():
 Game(width=WINDOW_WIDTH, height=WINDOW_HEIGHT, window_text='Minesweeper by Dan Tinsley', grab_input=True,
     collision_events_enabled=False)
 
+# prepare the flag sprites
 unclicked_tile_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
 unclicked_tile_sprite.draw_rectangle(0, 0, unclicked_tile_sprite.width, unclicked_tile_sprite.height,
     outline=sge.gfx.Color("black"), fill=sge.gfx.Color("red"))
 clicked_tile_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
 clicked_tile_sprite.draw_rectangle(0, 0, clicked_tile_sprite.width, clicked_tile_sprite.height,
+    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("green"))
+flagged_tile_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
+flagged_tile_sprite.draw_rectangle(0, 0, flagged_tile_sprite.width, flagged_tile_sprite.height,
     outline=sge.gfx.Color("black"), fill=sge.gfx.Color("blue"))
+
 
 background = sge.gfx.Background([], sge.gfx.Color("white"))
 
