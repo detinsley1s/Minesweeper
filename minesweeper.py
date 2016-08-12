@@ -12,12 +12,14 @@ TILE_SIDE_DIM = WINDOW_HEIGHT // GRID_HEIGHT
 mines_left = int(GRID_WIDTH * GRID_HEIGHT * 0.15)
 
 # for keeping track of the status of each individual cell
-cell_status = {'unclicked': 0, 'clicked': 1, 'flagged': 2}
+UNCLICKED = 0
+CLICKED = 1
+FLAGGED = 2
 
 # Make every cell hidden and never clicked
 board_cell_statuses = []
 for i in range(GRID_HEIGHT):
-    board_cell_statuses.append([cell_status['unclicked']]*GRID_WIDTH)
+    board_cell_statuses.append([UNCLICKED]*GRID_WIDTH)
 
 
 class Game(sge.dsp.Game):
@@ -39,11 +41,19 @@ class Game(sge.dsp.Game):
             
             # left button is for clicking the cell
             # right button is for flagging the cell
-            if button == 'left' and board_cell_statuses[mouse_x_loc][mouse_y_loc] != 1:
-                board_cell_statuses[mouse_x_loc][mouse_y_loc] = 1
+            if button == 'left' and board_cell_statuses[mouse_x_loc][mouse_y_loc] != CLICKED:
+                if mine_board[mouse_x_loc][mouse_y_loc] == 'M':
+                    game_lost()
+                if mine_board[mouse_x_loc][mouse_y_loc] == 0:
+                    display_adjacent_tiles(mouse_x_loc, mouse_y_loc)
+                else: 
+                    board_cell_statuses[mouse_x_loc][mouse_y_loc] = CLICKED
                 make_new_cell = True
-            elif button == 'right' and board_cell_statuses[mouse_x_loc][mouse_y_loc] == 0:
-                board_cell_statuses[mouse_x_loc][mouse_y_loc] = 2
+            elif button == 'right':
+                if board_cell_statuses[mouse_x_loc][mouse_y_loc] == UNCLICKED:
+                    board_cell_statuses[mouse_x_loc][mouse_y_loc] = FLAGGED
+                elif board_cell_statuses[mouse_x_loc][mouse_y_loc] == FLAGGED:
+                    board_cell_statuses[mouse_x_loc][mouse_y_loc] = UNCLICKED
                 make_new_cell = True
             else:
                 make_new_cell = False
@@ -73,12 +83,41 @@ class Room(sge.dsp.Room):
 class Tile(sge.dsp.Object):
 
     def __init__(self, x, y):
-        if board_cell_statuses[y//TILE_SIDE_DIM][x//TILE_SIDE_DIM] == cell_status['unclicked']:
+        if board_cell_statuses[y//TILE_SIDE_DIM][x//TILE_SIDE_DIM] == UNCLICKED:
             super().__init__(x, y, sprite=unclicked_tile_sprite)
-        elif board_cell_statuses[y//TILE_SIDE_DIM][x//TILE_SIDE_DIM] == cell_status['clicked']:
-            super().__init__(x, y, sprite=clicked_tile_sprite)
+        elif board_cell_statuses[y//TILE_SIDE_DIM][x//TILE_SIDE_DIM] == CLICKED:
+            if mine_board[y//TILE_SIDE_DIM][x//TILE_SIDE_DIM] == 'M':
+                super().__init__(x, y, sprite=mine_sprite)
+            elif isinstance(mine_board[y//TILE_SIDE_DIM][x//TILE_SIDE_DIM], int) and \
+              mine_board[y//TILE_SIDE_DIM][x//TILE_SIDE_DIM] > 0:
+                flags_nearby = mine_board[y//TILE_SIDE_DIM][x//TILE_SIDE_DIM]
+                super().__init__(x, y, sprite=number_tiles[flags_nearby-1])
+            else:
+                super().__init__(x, y, sprite=clicked_tile_sprite)
         else:
             super().__init__(x, y, sprite=flagged_tile_sprite)
+
+
+def display_adjacent_tiles(x, y):
+    #print(x, y, mine_board[x][y])
+    if mine_board[x][y] == 0 and board_cell_statuses[x][y] != CLICKED:
+        board_cell_statuses[x][y] = CLICKED
+        tiles[x*GRID_HEIGHT + y] = Tile(y*TILE_SIDE_DIM, x*TILE_SIDE_DIM)
+        if x - 1 >= 0:
+           display_adjacent_tiles(x-1, y)
+        if x + 1 <= GRID_HEIGHT - 1:
+           display_adjacent_tiles(x+1, y)
+        if y - 1 >= 0:
+            display_adjacent_tiles(x, y-1)
+        if y + 1 <= GRID_WIDTH - 1:
+            display_adjacent_tiles(x, y+1)
+        
+
+def game_lost():
+    """Performs game over activities when a mine is uncovered"""
+    
+
+    print('You lost. Press p to play again or q to quit')
 
 
 def generate_tiles():
@@ -133,16 +172,67 @@ def generate_hidden_cells():
 Game(width=WINDOW_WIDTH, height=WINDOW_HEIGHT, window_text='Minesweeper by Dan Tinsley', grab_input=True,
     collision_events_enabled=False)
 
+description_font = sge.gfx.Font(size=36, underline=True)
+mines_left_font = sge.gfx.Font(size=60)
+
 # prepare the flag sprites
 unclicked_tile_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
 unclicked_tile_sprite.draw_rectangle(0, 0, unclicked_tile_sprite.width, unclicked_tile_sprite.height,
     outline=sge.gfx.Color("black"), fill=sge.gfx.Color("red"))
 clicked_tile_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
 clicked_tile_sprite.draw_rectangle(0, 0, clicked_tile_sprite.width, clicked_tile_sprite.height,
-    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("green"))
+    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("white"))
 flagged_tile_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
 flagged_tile_sprite.draw_rectangle(0, 0, flagged_tile_sprite.width, flagged_tile_sprite.height,
-    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("blue"))
+    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("red"))
+flagged_tile_sprite.draw_text(description_font, 'F', 8, 5, flagged_tile_sprite.width, flagged_tile_sprite.height,
+    color=sge.gfx.Color("black"))
+mine_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
+mine_sprite.draw_rectangle(0, 0, mine_sprite.width, mine_sprite.height,
+    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("black"))
+number_1_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
+number_1_sprite.draw_rectangle(0, 0, number_1_sprite.width, number_1_sprite.height,
+    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("white"))
+number_1_sprite.draw_text(description_font, "1", 8, 5, clicked_tile_sprite.width, clicked_tile_sprite.height,
+    color=sge.gfx.Color("black"))
+number_2_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
+number_2_sprite.draw_rectangle(0, 0, number_2_sprite.width, number_2_sprite.height,
+    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("white"))
+number_2_sprite.draw_text(description_font, "2", 8, 5, clicked_tile_sprite.width, clicked_tile_sprite.height,
+    color=sge.gfx.Color("black"))
+number_3_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
+number_3_sprite.draw_rectangle(0, 0, number_3_sprite.width, number_3_sprite.height,
+    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("white"))
+number_3_sprite.draw_text(description_font, "3", 8, 5, clicked_tile_sprite.width, clicked_tile_sprite.height,
+    color=sge.gfx.Color("black"))
+number_4_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
+number_4_sprite.draw_rectangle(0, 0, number_4_sprite.width, number_4_sprite.height,
+    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("white"))
+number_4_sprite.draw_text(description_font, "4", 8, 5, clicked_tile_sprite.width, clicked_tile_sprite.height,
+    color=sge.gfx.Color("black"))
+number_5_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
+number_5_sprite.draw_rectangle(0, 0, number_5_sprite.width, number_5_sprite.height,
+    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("white"))
+number_5_sprite.draw_text(description_font, "5", 8, 5, clicked_tile_sprite.width, clicked_tile_sprite.height,
+    color=sge.gfx.Color("black"))
+number_6_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
+number_6_sprite.draw_rectangle(0, 0, number_6_sprite.width, number_6_sprite.height,
+    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("white"))
+number_6_sprite.draw_text(description_font, "6", 8, 5, clicked_tile_sprite.width, clicked_tile_sprite.height,
+    color=sge.gfx.Color("black"))
+number_7_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
+number_7_sprite.draw_rectangle(0, 0, number_7_sprite.width, number_7_sprite.height,
+    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("white"))
+number_7_sprite.draw_text(description_font, "7", 8, 5, clicked_tile_sprite.width, clicked_tile_sprite.height,
+    color=sge.gfx.Color("black"))
+number_8_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
+number_8_sprite.draw_rectangle(0, 0, number_8_sprite.width, number_8_sprite.height,
+    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("white"))
+number_8_sprite.draw_text(description_font, "8", 8, 5, clicked_tile_sprite.width, clicked_tile_sprite.height,
+    color=sge.gfx.Color("black"))
+
+number_tiles = [number_1_sprite, number_2_sprite, number_3_sprite, number_4_sprite, number_5_sprite,
+    number_6_sprite, number_7_sprite, number_8_sprite]
 
 
 background = sge.gfx.Background([], sge.gfx.Color("white"))
@@ -153,8 +243,11 @@ tiles = generate_tiles()
 # Make initial hidden state of board
 mine_board = generate_hidden_cells()
 
-description_font = sge.gfx.Font(size=36, underline=True)
-mines_left_font = sge.gfx.Font(size=60)
+# code to look at hidden board in console
+#for cell in mine_board:
+#    print(''.join(map(str, cell)))
+
+
 
 sge.game.start_room = Room([], background=background)
 
