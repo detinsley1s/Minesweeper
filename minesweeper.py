@@ -20,9 +20,12 @@ class Game(sge.dsp.Game):
 class Room(sge.dsp.Room):
 
     def event_step(self, time_passed, delta_mult):
-        sge.game.project_text(description_font, "Mines", WINDOW_WIDTH - 100, 150, color=sge.gfx.Color("black"), halign="center", valign="middle")
-        sge.game.project_text(description_font, "Remaining", WINDOW_WIDTH - 100, 190, color=sge.gfx.Color("black"), halign="center", valign="middle")
-        sge.game.project_text(mines_left_font, str(mines_left), WINDOW_WIDTH - 100, 250, color=sge.gfx.Color("black"), halign="center", valign="middle")
+        sge.game.project_text(description_font, "Mines", WINDOW_WIDTH - 100, 150,
+            color=sge.gfx.Color("black"), halign="center", valign="middle")
+        sge.game.project_text(description_font, "Remaining", WINDOW_WIDTH - 100, 190,
+            color=sge.gfx.Color("black"), halign="center", valign="middle")
+        sge.game.project_text(mines_left_font, str(mines_left), WINDOW_WIDTH - 100, 250,
+            color=sge.gfx.Color("black"), halign="center", valign="middle")
 
 
 class Tile(sge.dsp.Object):
@@ -52,7 +55,7 @@ background = sge.gfx.Background([], sge.gfx.Color("white"))
 tiles = generate_tiles()
 objects = [*tiles]
 
-mines_left = 20
+mines_left = int(GRID_WIDTH * GRID_HEIGHT * 0.2)
 description_font = sge.gfx.Font(size=36, underline=True)
 mines_left_font = sge.gfx.Font(size=60)
 
