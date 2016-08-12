@@ -19,7 +19,8 @@ class Game(sge.dsp.Game):
 
 class Room(sge.dsp.Room):
 
-    pass
+    def event_step(self, time_passed, delta_mult):
+        sge.game.project_text(font, "Mines Remaining: {}".format(mines_left), WINDOW_WIDTH - 100, 50, color=sge.gfx.Color("black"), halign="center", valign="middle")
 
 
 class Tile(sge.dsp.Object):
@@ -49,6 +50,10 @@ background = sge.gfx.Background([], sge.gfx.Color("white"))
 tiles = generate_tiles()
 objects = [*tiles]
 
-sge.game.start_room = sge.dsp.Room(objects, background=background)
+mines_left = 20
+font = sge.gfx.Font()
+
+
+sge.game.start_room = Room(objects, background=background)
 
 sge.game.start()
