@@ -9,7 +9,8 @@ GRID_HEIGHT = 20
 TILE_SIDE_DIM = WINDOW_HEIGHT // GRID_HEIGHT
 
 # determines how many mines to have hidden
-mines_left = int(GRID_WIDTH * GRID_HEIGHT * 0.16)
+#mines_left = int(GRID_WIDTH * GRID_HEIGHT * 0.16)
+mines_left = int(GRID_WIDTH * GRID_HEIGHT * 0.05)
 
 # for keeping track of the status of each individual cell
 UNCLICKED = 0
@@ -46,8 +47,6 @@ class Game(sge.dsp.Game):
             # left button is for clicking the cell
             # right button is for flagging the cell
             if button == 'left' and board_cell_statuses[mouse_x_loc][mouse_y_loc] == UNCLICKED:
-                if board_cell_statuses[mouse_x_loc][mouse_y_loc] == FLAGGED:
-                    mines_left += 1
                 if mine_board[mouse_x_loc][mouse_y_loc] == 'M':
                     game_lost()
                 elif mine_board[mouse_x_loc][mouse_y_loc] == 0:
@@ -69,6 +68,8 @@ class Game(sge.dsp.Game):
             if make_new_cell:
                 tiles[mouse_x_loc*GRID_HEIGHT + mouse_y_loc] = Tile(mouse_y_loc*TILE_SIDE_DIM,
                     mouse_x_loc*TILE_SIDE_DIM)
+            if mines_left == 0 and not any(x == UNCLICKED for y in board_cell_statuses for x in y):
+                print('You won!')
 
 
 class Room(sge.dsp.Room):
@@ -159,7 +160,7 @@ def generate_hidden_cells():
         mine_board.append([0]*GRID_WIDTH)
 
     # Place the bombs in the grid
-    total_mines_to_place = int(GRID_WIDTH * GRID_HEIGHT * 0.15)
+    total_mines_to_place = mines_left#int(GRID_WIDTH * GRID_HEIGHT * 0.15)
     while total_mines_to_place > 0:
         rand_x = random.choice(range(GRID_HEIGHT))
         rand_y = random.choice(range(GRID_WIDTH))
