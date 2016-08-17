@@ -22,14 +22,16 @@ board_cell_statuses = []
 for i in range(GRID_HEIGHT):
     board_cell_statuses.append([UNCLICKED]*GRID_WIDTH)
 
+# Determines if the game ended
+game_is_over = False
 
 class Game(sge.dsp.Game):
-
-    mines_left = int(GRID_WIDTH * GRID_HEIGHT * 0.15)
 
     def event_key_press(self, key, char):
         if key == 'escape':
             self.event_close()
+        #elif key == 'n':
+            #start_new_game()
 
     def event_close(self):
         self.end()
@@ -42,16 +44,16 @@ class Game(sge.dsp.Game):
         mouse_x_loc = int(sge.mouse.get_y() // TILE_SIDE_DIM)
         mouse_y_loc = int(sge.mouse.get_x() // TILE_SIDE_DIM)
 
-        if 0 <= mouse_y_loc < GRID_WIDTH and 0 <= mouse_x_loc < GRID_HEIGHT:
+        if not game_is_over and 0 <= mouse_y_loc < GRID_WIDTH and 0 <= mouse_x_loc < GRID_HEIGHT:
             
             # left button is for clicking the cell
             # right button is for flagging the cell
             if button == 'left' and board_cell_statuses[mouse_x_loc][mouse_y_loc] == UNCLICKED:
                 if mine_board[mouse_x_loc][mouse_y_loc] == 'M':
-                    game_lost()
+                    game_over('l')
                 elif mine_board[mouse_x_loc][mouse_y_loc] == 0:
                     display_adjacent_tiles(mouse_x_loc, mouse_y_loc)
-                else: 
+                else:
                     board_cell_statuses[mouse_x_loc][mouse_y_loc] = CLICKED
                 make_new_cell = True
             elif button == 'right':
@@ -68,8 +70,10 @@ class Game(sge.dsp.Game):
             if make_new_cell:
                 tiles[mouse_x_loc*GRID_HEIGHT + mouse_y_loc] = Tile(mouse_y_loc*TILE_SIDE_DIM,
                     mouse_x_loc*TILE_SIDE_DIM)
+
+            # Checks for if player won
             if mines_left == 0 and not any(x == UNCLICKED for y in board_cell_statuses for x in y):
-                print('You won!')
+                game_over('w')
 
 
 class Room(sge.dsp.Room):
@@ -87,6 +91,11 @@ class Room(sge.dsp.Room):
         # draw the tiles
         for tile in tiles:
             sge.game.project_sprite(tile.sprite, 0, tile.x, tile.y)
+
+    def event_key_press(self, key, char):
+        if key == 'n':
+            start_new_game()
+            
 
 
 class Tile(sge.dsp.Object):
@@ -129,12 +138,31 @@ def display_adjacent_tiles(x, y):
                 display_adjacent_tiles(x, y-1)
             if y + 1 <= GRID_WIDTH - 1:
                 display_adjacent_tiles(x, y+1)
-        
 
-def game_lost():
-    """Performs game over activities when a mine is uncovered"""
-    reveal_board()
-    print('You lost. Press p to play again or q to quit')
+
+def start_new_game():
+    global game_is_over, mines_left, tiles, mine_board, board_cell_statuses
+    game_is_over = False
+    mines_left = int(GRID_WIDTH * GRID_HEIGHT * 0.05)
+    board_cell_statuses = []
+    for i in range(GRID_HEIGHT):
+        board_cell_statuses.append([UNCLICKED]*GRID_WIDTH)
+    tiles = generate_tiles()
+    mine_board = generate_hidden_cells()
+
+
+def game_over(result):
+    """Performs game over activities"""
+    global game_is_over, mines_left
+
+    game_is_over = True
+    if result == 'l':
+        reveal_board()
+        mines_left = 0
+        print('You lost. Press p to play again or q to quit')
+    else:
+        print('you won')
+
 
 def reveal_board():
     """Reveals the entire board"""
@@ -160,7 +188,7 @@ def generate_hidden_cells():
         mine_board.append([0]*GRID_WIDTH)
 
     # Place the bombs in the grid
-    total_mines_to_place = mines_left#int(GRID_WIDTH * GRID_HEIGHT * 0.15)
+    total_mines_to_place = mines_left
     while total_mines_to_place > 0:
         rand_x = random.choice(range(GRID_HEIGHT))
         rand_y = random.choice(range(GRID_WIDTH))
@@ -252,7 +280,6 @@ mine_board = generate_hidden_cells()
 # code to look at hidden board in console
 #for cell in mine_board:
 #    print(''.join(map(str, cell)))
-
 
 
 sge.game.start_room = Room([], background=background)
