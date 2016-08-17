@@ -1,37 +1,26 @@
 import random
 import sge
 
-
+# For determining the dimensions of the board
 WINDOW_HEIGHT = 600
 WINDOW_WIDTH = 800
 GRID_WIDTH = 20
 GRID_HEIGHT = 20
 TILE_SIDE_DIM = WINDOW_HEIGHT // GRID_HEIGHT
 
-# determines how many mines to have hidden
-#mines_left = int(GRID_WIDTH * GRID_HEIGHT * 0.16)
-mines_left = int(GRID_WIDTH * GRID_HEIGHT * 0.05)
-
-# for keeping track of the status of each individual cell
+# For keeping track of the status of each individual cell
 UNCLICKED = 0
 CLICKED = 1
 FLAGGED = 2
 
-# Make every cell hidden and never clicked
-board_cell_statuses = []
-for i in range(GRID_HEIGHT):
-    board_cell_statuses.append([UNCLICKED]*GRID_WIDTH)
-
-# Determines if the game ended
-game_is_over = False
 
 class Game(sge.dsp.Game):
 
     def event_key_press(self, key, char):
         if key == 'escape':
             self.event_close()
-        #elif key == 'n':
-            #start_new_game()
+        elif key == 'n':
+            start_new_game()
 
     def event_close(self):
         self.end()
@@ -72,7 +61,7 @@ class Game(sge.dsp.Game):
                     mouse_x_loc*TILE_SIDE_DIM)
 
             # Checks for if player won
-            if mines_left == 0 and not any(x == UNCLICKED for y in board_cell_statuses for x in y):
+            if mines_left == 0 and not any(x == UNCLICKED for y in board_cell_statuses for x in y) and not game_is_over:
                 game_over('w')
 
 
@@ -91,11 +80,6 @@ class Room(sge.dsp.Room):
         # draw the tiles
         for tile in tiles:
             sge.game.project_sprite(tile.sprite, 0, tile.x, tile.y)
-
-    def event_key_press(self, key, char):
-        if key == 'n':
-            start_new_game()
-            
 
 
 class Tile(sge.dsp.Object):
@@ -117,7 +101,8 @@ class Tile(sge.dsp.Object):
 
 
 def display_adjacent_tiles(x, y):
-    #print(x, y, mine_board[x][y])
+    """Displays all the tiles that are blank or that form a boundary
+       when a blank cell is clicked on the board"""
     if mine_board[x][y] != 'M' and board_cell_statuses[x][y] == UNCLICKED:
         board_cell_statuses[x][y] = CLICKED
         tiles[x*GRID_HEIGHT + y] = Tile(y*TILE_SIDE_DIM, x*TILE_SIDE_DIM)
@@ -141,13 +126,22 @@ def display_adjacent_tiles(x, y):
 
 
 def start_new_game():
+    """Starts a new game and initializes the data"""
     global game_is_over, mines_left, tiles, mine_board, board_cell_statuses
+   
+    # Determines if the game ended 
     game_is_over = False
+    
+    # determines how many mines to have hidden
     mines_left = int(GRID_WIDTH * GRID_HEIGHT * 0.05)
-    board_cell_statuses = []
-    for i in range(GRID_HEIGHT):
-        board_cell_statuses.append([UNCLICKED]*GRID_WIDTH)
+    
+    # Make every cell hidden and never clicked
+    board_cell_statuses = initialize_cell_statuses()
+
+    # generate the tiles for drawing at beginning of game
     tiles = generate_tiles()
+    
+    # Make initial hidden state of board
     mine_board = generate_hidden_cells()
 
 
@@ -171,6 +165,14 @@ def reveal_board():
             if board_cell_statuses[row][col] != CLICKED:
                 board_cell_statuses[row][col] = CLICKED
                 tiles[row*GRID_HEIGHT + col] = Tile(col*TILE_SIDE_DIM, row*TILE_SIDE_DIM)
+
+
+def initialize_cell_statuses():
+    statuses = []
+    for _ in range(GRID_HEIGHT):
+        statuses.append([UNCLICKED]*GRID_WIDTH)
+    return statuses
+
 
 def generate_tiles():
     """Draws the minesweeper grid"""
@@ -271,19 +273,15 @@ number_tiles = [number_1_sprite, number_2_sprite, number_3_sprite, number_4_spri
 
 background = sge.gfx.Background([], sge.gfx.Color("white"))
 
-# generate the tiles for drawing at beginning of game
-tiles = generate_tiles()
+sge.game.start_room = Room([], background=background)
 
-# Make initial hidden state of board
-mine_board = generate_hidden_cells()
+sge.game.mouse.visible = True
+
+start_new_game()
 
 # code to look at hidden board in console
 #for cell in mine_board:
 #    print(''.join(map(str, cell)))
 
-
-sge.game.start_room = Room([], background=background)
-
-sge.game.mouse.visible = True
-
-sge.game.start()
+if __name__ == '__main__':
+    sge.game.start()
