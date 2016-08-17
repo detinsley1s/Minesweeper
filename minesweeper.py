@@ -50,7 +50,7 @@ class Game(sge.dsp.Game):
                     mines_left += 1
                 if mine_board[mouse_x_loc][mouse_y_loc] == 'M':
                     game_lost()
-                if mine_board[mouse_x_loc][mouse_y_loc] == 0:
+                elif mine_board[mouse_x_loc][mouse_y_loc] == 0:
                     display_adjacent_tiles(mouse_x_loc, mouse_y_loc)
                 else: 
                     board_cell_statuses[mouse_x_loc][mouse_y_loc] = CLICKED
@@ -207,7 +207,7 @@ clicked_tile_sprite.draw_rectangle(0, 0, clicked_tile_sprite.width, clicked_tile
     outline=sge.gfx.Color("black"), fill=sge.gfx.Color("white"))
 flagged_tile_sprite = sge.gfx.Sprite(name='flag', directory='images/', width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
 flagged_tile_sprite.draw_rectangle(0, 0, flagged_tile_sprite.width, flagged_tile_sprite.height,
-    outline=sge.gfx.Color("black"))#, fill=sge.gfx.Color("red"))
+    outline=sge.gfx.Color("black"), fill=sge.gfx.Color((100, 100, 100, 100)))
 mine_sprite = sge.gfx.Sprite(name='explosion', directory='images/', width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
 mine_sprite.draw_rectangle(0, 0, mine_sprite.width, mine_sprite.height,
     outline=sge.gfx.Color("black"))
