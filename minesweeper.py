@@ -9,7 +9,7 @@ GRID_HEIGHT = 20
 TILE_SIDE_DIM = WINDOW_HEIGHT // GRID_HEIGHT
 
 # determines how many mines to have hidden
-mines_left = int(GRID_WIDTH * GRID_HEIGHT * 0.15)
+mines_left = int(GRID_WIDTH * GRID_HEIGHT * 0.16)
 
 # for keeping track of the status of each individual cell
 UNCLICKED = 0
@@ -108,24 +108,21 @@ class Tile(sge.dsp.Object):
 
 def display_adjacent_tiles(x, y):
     #print(x, y, mine_board[x][y])
-    global mines_left
-    if mine_board[x][y] != 'M' and board_cell_statuses[x][y] != CLICKED:
-        if board_cell_statuses[x][y] == FLAGGED:
-            mines_left += 1
+    if mine_board[x][y] != 'M' and board_cell_statuses[x][y] == UNCLICKED:
         board_cell_statuses[x][y] = CLICKED
         tiles[x*GRID_HEIGHT + y] = Tile(y*TILE_SIDE_DIM, x*TILE_SIDE_DIM)
         if mine_board[x][y] == 0:
             if x - 1 >= 0:
                 display_adjacent_tiles(x-1, y)
-                if y - 1 >= 0 and mine_board[x-1][y-1] != 'M':# and mine_board[x-1][y-1] > 0:
+                if y - 1 >= 0 and mine_board[x-1][y-1] != 'M':
                        display_adjacent_tiles(x-1, y-1)
-                if y + 1 <= GRID_WIDTH - 1 and mine_board[x-1][y+1] != 'M':# and mine_board[x-1][y+1] > 0:
+                if y + 1 <= GRID_WIDTH - 1 and mine_board[x-1][y+1] != 'M':
                        display_adjacent_tiles(x-1, y+1)
             if x + 1 <= GRID_HEIGHT - 1:
                 display_adjacent_tiles(x+1, y)
-                if y - 1 >= 0 and mine_board[x+1][y-1] != 'M':# and mine_board[x+1][y-1] > 0:
+                if y - 1 >= 0 and mine_board[x+1][y-1] != 'M':
                        display_adjacent_tiles(x+1, y-1)
-                if y + 1 <= GRID_WIDTH - 1 and mine_board[x+1][y+1] != 'M':# and mine_board[x+1][y+1] > 0:
+                if y + 1 <= GRID_WIDTH - 1 and mine_board[x+1][y+1] != 'M':
                        display_adjacent_tiles(x+1, y+1)
             if y - 1 >= 0:
                 display_adjacent_tiles(x, y-1)
@@ -208,54 +205,36 @@ unclicked_tile_sprite.draw_rectangle(0, 0, unclicked_tile_sprite.width, unclicke
 clicked_tile_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
 clicked_tile_sprite.draw_rectangle(0, 0, clicked_tile_sprite.width, clicked_tile_sprite.height,
     outline=sge.gfx.Color("black"), fill=sge.gfx.Color("white"))
-flagged_tile_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
+flagged_tile_sprite = sge.gfx.Sprite(name='flag', directory='images/', width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
 flagged_tile_sprite.draw_rectangle(0, 0, flagged_tile_sprite.width, flagged_tile_sprite.height,
-    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("red"))
-flagged_tile_sprite.draw_text(description_font, 'F', 8, 5, flagged_tile_sprite.width, flagged_tile_sprite.height,
-    color=sge.gfx.Color("black"))
-mine_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
+    outline=sge.gfx.Color("black"))#, fill=sge.gfx.Color("red"))
+mine_sprite = sge.gfx.Sprite(name='explosion', directory='images/', width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
 mine_sprite.draw_rectangle(0, 0, mine_sprite.width, mine_sprite.height,
-    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("black"))
-number_1_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
+    outline=sge.gfx.Color("black"))
+number_1_sprite = sge.gfx.Sprite(name='one', directory='images/', width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
 number_1_sprite.draw_rectangle(0, 0, number_1_sprite.width, number_1_sprite.height,
-    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("white"))
-number_1_sprite.draw_text(description_font, "1", 8, 5, clicked_tile_sprite.width, clicked_tile_sprite.height,
-    color=sge.gfx.Color("black"))
-number_2_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
+    outline=sge.gfx.Color("black"))
+number_2_sprite = sge.gfx.Sprite(name='two', directory='images/', width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
 number_2_sprite.draw_rectangle(0, 0, number_2_sprite.width, number_2_sprite.height,
-    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("white"))
-number_2_sprite.draw_text(description_font, "2", 8, 5, clicked_tile_sprite.width, clicked_tile_sprite.height,
-    color=sge.gfx.Color("black"))
-number_3_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
+    outline=sge.gfx.Color("black"))
+number_3_sprite = sge.gfx.Sprite(name='three', directory='images/', width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
 number_3_sprite.draw_rectangle(0, 0, number_3_sprite.width, number_3_sprite.height,
-    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("white"))
-number_3_sprite.draw_text(description_font, "3", 8, 5, clicked_tile_sprite.width, clicked_tile_sprite.height,
-    color=sge.gfx.Color("black"))
-number_4_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
+    outline=sge.gfx.Color("black"))
+number_4_sprite = sge.gfx.Sprite(name='four', directory='images/', width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
 number_4_sprite.draw_rectangle(0, 0, number_4_sprite.width, number_4_sprite.height,
-    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("white"))
-number_4_sprite.draw_text(description_font, "4", 8, 5, clicked_tile_sprite.width, clicked_tile_sprite.height,
-    color=sge.gfx.Color("black"))
-number_5_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
+    outline=sge.gfx.Color("black"))
+number_5_sprite = sge.gfx.Sprite(name='five', directory='images/', width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
 number_5_sprite.draw_rectangle(0, 0, number_5_sprite.width, number_5_sprite.height,
-    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("white"))
-number_5_sprite.draw_text(description_font, "5", 8, 5, clicked_tile_sprite.width, clicked_tile_sprite.height,
-    color=sge.gfx.Color("black"))
-number_6_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
+    outline=sge.gfx.Color("black"))
+number_6_sprite = sge.gfx.Sprite(name='six', directory='images/', width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
 number_6_sprite.draw_rectangle(0, 0, number_6_sprite.width, number_6_sprite.height,
-    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("white"))
-number_6_sprite.draw_text(description_font, "6", 8, 5, clicked_tile_sprite.width, clicked_tile_sprite.height,
-    color=sge.gfx.Color("black"))
-number_7_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
+    outline=sge.gfx.Color("black"))
+number_7_sprite = sge.gfx.Sprite(name='seven', directory='images/', width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
 number_7_sprite.draw_rectangle(0, 0, number_7_sprite.width, number_7_sprite.height,
-    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("white"))
-number_7_sprite.draw_text(description_font, "7", 8, 5, clicked_tile_sprite.width, clicked_tile_sprite.height,
-    color=sge.gfx.Color("black"))
-number_8_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
+    outline=sge.gfx.Color("black"))
+number_8_sprite = sge.gfx.Sprite(name='eight', directory='images/', width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
 number_8_sprite.draw_rectangle(0, 0, number_8_sprite.width, number_8_sprite.height,
-    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("white"))
-number_8_sprite.draw_text(description_font, "8", 8, 5, clicked_tile_sprite.width, clicked_tile_sprite.height,
-    color=sge.gfx.Color("black"))
+    outline=sge.gfx.Color("black"))
 
 number_tiles = [number_1_sprite, number_2_sprite, number_3_sprite, number_4_sprite, number_5_sprite,
     number_6_sprite, number_7_sprite, number_8_sprite]
