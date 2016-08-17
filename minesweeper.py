@@ -1,3 +1,4 @@
+
 import random
 import sge
 
@@ -70,12 +71,26 @@ class Room(sge.dsp.Room):
     def event_step(self, time_passed, delta_mult):
 
         # display the text
-        sge.game.project_text(description_font, "Mines", WINDOW_WIDTH - 100, 150,
-            color=sge.gfx.Color("black"), halign="center", valign="middle")
-        sge.game.project_text(description_font, "Remaining", WINDOW_WIDTH - 100, 190,
-            color=sge.gfx.Color("black"), halign="center", valign="middle")
-        sge.game.project_text(mines_left_font, str(mines_left), WINDOW_WIDTH - 100, 250,
-            color=sge.gfx.Color("black"), halign="center", valign="middle")
+        sge.game.project_text(description_font, 'Mines', WINDOW_WIDTH - 100, 70,
+            color=sge.gfx.Color('black'), halign='center', valign='middle')
+        sge.game.project_text(description_font, 'Remaining', WINDOW_WIDTH - 100, 110,
+            color=sge.gfx.Color('black'), halign='center', valign='middle')
+        sge.game.project_text(mines_left_font, str(mines_left), WINDOW_WIDTH - 100, 170,
+            color=sge.gfx.Color('black'), halign='center', valign='middle')
+        sge.game.project_text(description_font, 'Instructions', WINDOW_WIDTH - 100, WINDOW_HEIGHT - 168,
+            color=sge.gfx.Color('black'), halign='center', valign='middle')
+        sge.game.project_text(instructions_font, 'Left Mouse Button: Reveal Tile', WINDOW_WIDTH - 187, WINDOW_HEIGHT - 130,
+            color=sge.gfx.Color('black'), halign='left', valign='middle')
+        sge.game.project_text(instructions_font, 'Right Mouse Button: Flag Tile', WINDOW_WIDTH - 187, WINDOW_HEIGHT - 110,
+            color=sge.gfx.Color('black'), halign='left', valign='middle')
+        sge.game.project_text(instructions_font, 'N: New Game', WINDOW_WIDTH - 187, WINDOW_HEIGHT - 90,
+            color=sge.gfx.Color('black'), halign='left', valign='middle')
+        sge.game.project_text(instructions_font, 'Esc: Exit Game', WINDOW_WIDTH - 187, WINDOW_HEIGHT - 70,
+            color=sge.gfx.Color('black'), halign='left', valign='middle')
+
+        if game_is_over:
+            sge.game.project_text(game_over_font, game_result, WINDOW_WIDTH - 100, 290,
+                color=sge.gfx.Color('red'), halign='center', valign='middle')
 
         # draw the tiles
         for tile in tiles:
@@ -133,7 +148,7 @@ def start_new_game():
     game_is_over = False
     
     # determines how many mines to have hidden
-    mines_left = int(GRID_WIDTH * GRID_HEIGHT * 0.05)
+    mines_left = int(GRID_WIDTH * GRID_HEIGHT * 0.16)
     
     # Make every cell hidden and never clicked
     board_cell_statuses = initialize_cell_statuses()
@@ -147,15 +162,15 @@ def start_new_game():
 
 def game_over(result):
     """Performs game over activities"""
-    global game_is_over, mines_left
+    global game_is_over, mines_left, game_result
 
     game_is_over = True
     if result == 'l':
         reveal_board()
         mines_left = 0
-        print('You lost. Press p to play again or q to quit')
+        game_result = 'You lost!\nTry again!'
     else:
-        print('you won')
+        game_result = 'You won!\nPlay again!'
 
 
 def reveal_board():
@@ -226,8 +241,10 @@ def generate_hidden_cells():
 Game(width=WINDOW_WIDTH, height=WINDOW_HEIGHT, window_text='Minesweeper by Dan Tinsley', grab_input=True,
     collision_events_enabled=False)
 
-description_font = sge.gfx.Font(size=36, underline=True)
-mines_left_font = sge.gfx.Font(size=60)
+description_font = sge.gfx.Font(name='fonts/horta.ttf', size=36, underline=True)
+mines_left_font = sge.gfx.Font(name='fonts/horta.ttf', size=60)
+instructions_font = sge.gfx.Font(name='fonts/horta.ttf', size=18)
+game_over_font = sge.gfx.Font(name='fonts/horta.ttf', size=50)
 
 # prepare the flag sprites
 unclicked_tile_sprite = sge.gfx.Sprite(width=TILE_SIDE_DIM, height=TILE_SIDE_DIM, origin_x=0, origin_y=0)
