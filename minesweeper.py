@@ -6,6 +6,8 @@ Copyright 2016
 
 A simple Minesweeper clone developed
 with the help of the SGE framework
+
+Sound effects generated at www.bfxr.net
 """
 
 import random
