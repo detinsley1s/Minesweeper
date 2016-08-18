@@ -70,8 +70,8 @@ class Game(sge.dsp.Game):
         if not board.board_is_complete and 0 <= mouse_y_loc < GRID_WIDTH and (
                 0 <= mouse_x_loc < GRID_HEIGHT):
 
-            # left button is for clicking the cell
-            # right button is for flagging the cell
+            # Left button is for clicking the cell
+            # Right button is for flagging the cell
             if button == 'left':
                 make_new_cell = board.cell_is_clicked(mouse_x_loc, mouse_y_loc)
             elif button == 'right':
@@ -107,7 +107,7 @@ class Room(sge.dsp.Room):
         delta_mult -- what speed and movement should be multiplied by
                       this frame due to delta timing
         """
-        # display the screen's text
+        # Display the screen's text
         sge.game.project_text(
             DESCRIPTION_FONT, 'Mines', WINDOW_WIDTH - 100, 70,
             color=sge.gfx.Color('black'), halign='center', valign='middle'
@@ -153,7 +153,7 @@ class Room(sge.dsp.Room):
                 color=sge.gfx.Color('red'), halign='center', valign='middle'
             )
 
-        # draw the tiles
+        # Draw the tiles
         for tile in board.tiles:
             sge.game.project_sprite(tile.sprite, 0, tile.x, tile.y)
 
@@ -398,11 +398,13 @@ class Board:
         """Perform actions for when the game was lost."""
         self.reveal_board()
         self.mines_left = 0
+        EXPLOSION_SOUND.play()
         self.result = 'You lost!\nTry again!'
 
     def game_is_won(self):
         """Perform actions for when the game was won."""
         self.board_is_complete = True
+        WINNER_SOUND.play()
         self.result = 'You won!\nPlay again!'
 
 
@@ -417,7 +419,7 @@ Game(
     collision_events_enabled=False
 )
 
-# fonts
+# Create fonts
 DESCRIPTION_FONT = (
     sge.gfx.Font(name='fonts/horta.ttf', size=36, underline=True)
 )
@@ -425,20 +427,16 @@ MINES_LEFT_FONT = sge.gfx.Font(name='fonts/horta.ttf', size=60)
 INSTRUCTIONS_FONT = sge.gfx.Font(name='fonts/horta.ttf', size=18)
 GAME_OVER_FONT = sge.gfx.Font(name='fonts/horta.ttf', size=50)
 
-# prepare the various sprites used in the game
+# Create sound effect
+EXPLOSION_SOUND = sge.snd.Sound('sounds/explosion.ogg')
+WINNER_SOUND = sge.snd.Sound('sounds/winner.ogg')
+
+# Create sprites
 UNCLICKED_TILE_SPRITE = (
     sge.gfx.Sprite(width=TILE_DIMS, height=TILE_DIMS, origin_x=0, origin_y=0)
 )
-UNCLICKED_TILE_SPRITE.draw_rectangle(
-    0, 0, UNCLICKED_TILE_SPRITE.width, UNCLICKED_TILE_SPRITE.height,
-    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("red")
-)
 CLICKED_TILE_SPRITE = (
     sge.gfx.Sprite(width=TILE_DIMS, height=TILE_DIMS, origin_x=0, origin_y=0)
-)
-CLICKED_TILE_SPRITE.draw_rectangle(
-    0, 0, CLICKED_TILE_SPRITE.width, CLICKED_TILE_SPRITE.height,
-    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("white")
 )
 FLAGGED_TILE_SPRITE = (
     sge.gfx.Sprite(
@@ -446,18 +444,11 @@ FLAGGED_TILE_SPRITE = (
         origin_x=0, origin_y=0
     )
 )
-FLAGGED_TILE_SPRITE.draw_rectangle(
-    0, 0, FLAGGED_TILE_SPRITE.width, FLAGGED_TILE_SPRITE.height,
-    outline=sge.gfx.Color("black"), fill=sge.gfx.Color((100, 100, 100, 100))
-)
 MINE_SPRITE = (
     sge.gfx.Sprite(
         name='explosion', directory='images/', width=TILE_DIMS,
         height=TILE_DIMS, origin_x=0, origin_y=0
     )
-)
-MINE_SPRITE.draw_rectangle(
-    0, 0, MINE_SPRITE.width, MINE_SPRITE.height, outline=sge.gfx.Color("black")
 )
 NUMBER_1_SPRITE = (
     sge.gfx.Sprite(
@@ -465,19 +456,11 @@ NUMBER_1_SPRITE = (
         origin_x=0, origin_y=0
     )
 )
-NUMBER_1_SPRITE.draw_rectangle(
-    0, 0, NUMBER_1_SPRITE.width, NUMBER_1_SPRITE.height,
-    outline=sge.gfx.Color("black")
-)
 NUMBER_2_SPRITE = (
     sge.gfx.Sprite(
         name='two', directory='images/', width=TILE_DIMS, height=TILE_DIMS,
         origin_x=0, origin_y=0
     )
-)
-NUMBER_2_SPRITE.draw_rectangle(
-    0, 0, NUMBER_2_SPRITE.width, NUMBER_2_SPRITE.height,
-    outline=sge.gfx.Color("black")
 )
 NUMBER_3_SPRITE = (
     sge.gfx.Sprite(
@@ -485,19 +468,11 @@ NUMBER_3_SPRITE = (
         origin_x=0, origin_y=0
     )
 )
-NUMBER_3_SPRITE.draw_rectangle(
-    0, 0, NUMBER_3_SPRITE.width, NUMBER_3_SPRITE.height,
-    outline=sge.gfx.Color("black")
-)
 NUMBER_4_SPRITE = (
     sge.gfx.Sprite(
         name='four', directory='images/', width=TILE_DIMS, height=TILE_DIMS,
         origin_x=0, origin_y=0
     )
-)
-NUMBER_4_SPRITE.draw_rectangle(
-    0, 0, NUMBER_4_SPRITE.width, NUMBER_4_SPRITE.height,
-    outline=sge.gfx.Color("black")
 )
 NUMBER_5_SPRITE = (
     sge.gfx.Sprite(
@@ -505,19 +480,11 @@ NUMBER_5_SPRITE = (
         origin_x=0, origin_y=0
     )
 )
-NUMBER_5_SPRITE.draw_rectangle(
-    0, 0, NUMBER_5_SPRITE.width, NUMBER_5_SPRITE.height,
-    outline=sge.gfx.Color("black")
-)
 NUMBER_6_SPRITE = (
     sge.gfx.Sprite(
         name='six', directory='images/', width=TILE_DIMS, height=TILE_DIMS,
         origin_x=0, origin_y=0
     )
-)
-NUMBER_6_SPRITE.draw_rectangle(
-    0, 0, NUMBER_6_SPRITE.width, NUMBER_6_SPRITE.height,
-    outline=sge.gfx.Color("black")
 )
 NUMBER_7_SPRITE = (
     sge.gfx.Sprite(
@@ -525,31 +492,45 @@ NUMBER_7_SPRITE = (
         origin_x=0, origin_y=0
     )
 )
-NUMBER_7_SPRITE.draw_rectangle(
-    0, 0, NUMBER_7_SPRITE.width, NUMBER_7_SPRITE.height,
-    outline=sge.gfx.Color("black")
-)
 NUMBER_8_SPRITE = (
     sge.gfx.Sprite(
         name='eight', directory='images/', width=TILE_DIMS, height=TILE_DIMS,
         origin_x=0, origin_y=0
     )
 )
-NUMBER_8_SPRITE.draw_rectangle(
-    0, 0, NUMBER_8_SPRITE.width, NUMBER_8_SPRITE.height,
-    outline=sge.gfx.Color("black")
-)
 
-# list of the 8 number sprites
+# List of the 8 number sprites
 NUMBER_TILES = [
     NUMBER_1_SPRITE, NUMBER_2_SPRITE, NUMBER_3_SPRITE, NUMBER_4_SPRITE,
     NUMBER_5_SPRITE, NUMBER_6_SPRITE, NUMBER_7_SPRITE, NUMBER_8_SPRITE
 ]
 
+# Create tiles using the sprites
+UNCLICKED_TILE_SPRITE.draw_rectangle(
+    0, 0, UNCLICKED_TILE_SPRITE.width, UNCLICKED_TILE_SPRITE.height,
+    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("red")
+)
+CLICKED_TILE_SPRITE.draw_rectangle(
+    0, 0, CLICKED_TILE_SPRITE.width, CLICKED_TILE_SPRITE.height,
+    outline=sge.gfx.Color("black"), fill=sge.gfx.Color("white")
+)
+FLAGGED_TILE_SPRITE.draw_rectangle(
+    0, 0, FLAGGED_TILE_SPRITE.width, FLAGGED_TILE_SPRITE.height,
+    outline=sge.gfx.Color("black"), fill=sge.gfx.Color((100, 100, 100, 100))
+)
+MINE_SPRITE.draw_rectangle(
+    0, 0, MINE_SPRITE.width, MINE_SPRITE.height, outline=sge.gfx.Color("black")
+)
+for number_tile in NUMBER_TILES:
+    number_tile.draw_rectangle(
+        0, 0, number_tile.width, number_tile.height,
+        outline=sge.gfx.Color("black")
+    )
+
 # Instantiate the board for gameplay
 board = Board()
 
-# Instantiate the level and its background
+# Instantiate the level with a specified background
 BACKGROUND = sge.gfx.Background([], sge.gfx.Color("white"))
 sge.game.start_room = Room([], background=BACKGROUND)
 
