@@ -17,11 +17,11 @@ import sge
 # For determining the dimensions of the board
 WINDOW_HEIGHT = 600
 WINDOW_WIDTH = 800
-GRID_DIMS = 40
+GRID_DIMS = 20
 TILE_DIMS = WINDOW_HEIGHT // GRID_DIMS
 
 # Ratio of mines to total cells
-MINE_RATIO = 0.1
+MINE_RATIO = 0.16
 
 # For keeping track of the status of each individual cell
 UNCLICKED = 0
@@ -404,7 +404,7 @@ MINES_LEFT_FONT = sge.gfx.Font(name='fonts/horta.ttf', size=60)
 INSTRUCTIONS_FONT = sge.gfx.Font(name='fonts/horta.ttf', size=18)
 GAME_OVER_FONT = sge.gfx.Font(name='fonts/horta.ttf', size=50)
 
-# Create sound effect
+# Create sound effects
 EXPLOSION_SOUND = sge.snd.Sound('sounds/explosion.ogg')
 WINNER_SOUND = sge.snd.Sound('sounds/winner.ogg')
 
