@@ -17,7 +17,7 @@ import sge
 # For determining the dimensions of the board
 WINDOW_HEIGHT = 600
 WINDOW_WIDTH = 800
-GRID_DIMS = 20
+GRID_DIMS = 25
 TILE_DIMS = WINDOW_HEIGHT // GRID_DIMS
 
 # Ratio of mines to total cells
@@ -511,7 +511,7 @@ board = Board()
 BACKGROUND = sge.gfx.Background([], sge.gfx.Color("white"))
 sge.game.start_room = Room([], background=BACKGROUND)
 
-# Make the mouse visible for usage in the game
+# Make the mouse cursor visible for usage in the game
 sge.game.mouse.visible = True
 
 if __name__ == '__main__':
