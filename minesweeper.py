@@ -17,9 +17,11 @@ import sge
 # For determining the dimensions of the board
 WINDOW_HEIGHT = 600
 WINDOW_WIDTH = 800
-GRID_WIDTH = 20
-GRID_HEIGHT = 20
-TILE_DIMS = WINDOW_HEIGHT // GRID_HEIGHT
+GRID_DIMS = 40
+TILE_DIMS = WINDOW_HEIGHT // GRID_DIMS
+
+# Ratio of mines to total cells
+MINE_RATIO = 0.1
 
 # For keeping track of the status of each individual cell
 UNCLICKED = 0
@@ -69,8 +71,8 @@ class Game(sge.dsp.Game):
         mouse_x_loc = int(sge.mouse.get_y() // TILE_DIMS)
         mouse_y_loc = int(sge.mouse.get_x() // TILE_DIMS)
 
-        if not board.board_is_complete and 0 <= mouse_y_loc < GRID_WIDTH and (
-                0 <= mouse_x_loc < GRID_HEIGHT):
+        if not board.board_is_complete and 0 <= mouse_y_loc < GRID_DIMS and (
+                0 <= mouse_x_loc < GRID_DIMS):
 
             # Left button is for clicking the cell
             # Right button is for flagging the cell
@@ -225,11 +227,10 @@ class Board:
 
     def __init__(self):
         """Initialize the instance variables and prepare board."""
-        self.mines_left = int(GRID_WIDTH * GRID_HEIGHT * 0.16)
+        self.mines_left = int(GRID_DIMS**2 * MINE_RATIO)
         self.initialize_cell_statuses()
         self.initialize_hidden_board()
         self.place_mines()
-        self.add_hint_numbers()
         self.generate_tiles()
         self.board_is_complete = False
         self.result = ''
@@ -244,28 +245,15 @@ class Board:
         if self.mine_board[row][col] != 'M' and (
                 self.cell_statuses[row][col] == UNCLICKED):
             self.cell_statuses[row][col] = CLICKED
-            self.tiles[row*GRID_HEIGHT + col] = (
+            self.tiles[row*GRID_DIMS + col] = (
                 Tile(col*TILE_DIMS, row*TILE_DIMS, self)
             )
             if self.mine_board[row][col] == 0:
-                if row - 1 >= 0:
-                    self.display_adjacent_tiles(row-1, col)
-                    if col - 1 >= 0 and self.mine_board[row-1][col-1] != 'M':
-                        self.display_adjacent_tiles(row-1, col-1)
-                    if col + 1 <= GRID_WIDTH - 1 and (
-                            self.mine_board[row-1][col+1] != 'M'):
-                        self.display_adjacent_tiles(row-1, col+1)
-                if row + 1 <= GRID_HEIGHT - 1:
-                    self.display_adjacent_tiles(row+1, col)
-                    if col - 1 >= 0 and self.mine_board[row+1][col-1] != 'M':
-                        self.display_adjacent_tiles(row+1, col-1)
-                    if col + 1 <= GRID_WIDTH - 1 and (
-                            self.mine_board[row+1][col+1] != 'M'):
-                        self.display_adjacent_tiles(row+1, col+1)
-                if col - 1 >= 0:
-                    self.display_adjacent_tiles(row, col-1)
-                if col + 1 <= GRID_WIDTH - 1:
-                    self.display_adjacent_tiles(row, col+1)
+                for i in range(row-1, row+2):
+                    for j in range(col-1, col+2):
+                        if 0 <= i < GRID_DIMS and 0 <= j < GRID_DIMS and (
+                                (i, j) != (row, col)):
+                            self.display_adjacent_tiles(i, j)
 
     def reveal_board(self):
         """Reveal the entire board."""
@@ -273,7 +261,7 @@ class Board:
             for col, _ in enumerate(r_val):
                 if self.cell_statuses[row][col] != CLICKED:
                     self.cell_statuses[row][col] = CLICKED
-                    self.tiles[row*GRID_HEIGHT + col] = (
+                    self.tiles[row*GRID_DIMS + col] = (
                         Tile(col*TILE_DIMS, row*TILE_DIMS, self)
                     )
         self.board_is_complete = True
@@ -281,58 +269,45 @@ class Board:
     def initialize_cell_statuses(self):
         """Initialize all cells as being unclicked."""
         self.cell_statuses = []
-        for _ in range(GRID_HEIGHT):
-            self.cell_statuses.append([UNCLICKED]*GRID_WIDTH)
+        for _ in range(GRID_DIMS):
+            self.cell_statuses.append([UNCLICKED]*GRID_DIMS)
 
     def generate_tiles(self):
         """Draw the initial board that is shown to the player."""
         self.tiles = []
-        for i in range(GRID_HEIGHT):
-            for j in range(GRID_WIDTH):
+        for i in range(GRID_DIMS):
+            for j in range(GRID_DIMS):
                 self.tiles.append(Tile(j*TILE_DIMS, i*TILE_DIMS, self))
 
     def initialize_hidden_board(self):
         """Initialize the hidden board as all blanks."""
         self.mine_board = []
-        for _ in range(GRID_HEIGHT):
-            self.mine_board.append([0]*GRID_WIDTH)
+        for _ in range(GRID_DIMS):
+            self.mine_board.append([0]*GRID_DIMS)
 
     def place_mines(self):
         """Place the mines inside the board randomly."""
         total_mines_to_place = self.mines_left
         while total_mines_to_place > 0:
-            rand_x = random.choice(range(GRID_HEIGHT))
-            rand_y = random.choice(range(GRID_WIDTH))
+            rand_x = random.choice(range(GRID_DIMS))
+            rand_y = random.choice(range(GRID_DIMS))
             if self.mine_board[rand_x][rand_y] == 0:
                 self.mine_board[rand_x][rand_y] = 'M'
                 total_mines_to_place -= 1
+                self.add_hint_numbers(rand_x, rand_y)
 
-    def add_hint_numbers(self):
-        """Add the hint numbers to the board."""
-        for i in range(GRID_HEIGHT):
-            for j in range(GRID_WIDTH):
-                if self.mine_board[i][j] == 'M':
-                    if i - 1 >= 0:
-                        if j - 1 >= 0 and self.mine_board[i-1][j-1] != 'M':
-                            self.mine_board[i-1][j-1] += 1
-                        if j + 1 <= GRID_WIDTH - 1 and (
-                                self.mine_board[i-1][j+1] != 'M'):
-                            self.mine_board[i-1][j+1] += 1
-                        if self.mine_board[i-1][j] != 'M':
-                            self.mine_board[i-1][j] += 1
-                    if i + 1 <= GRID_HEIGHT - 1:
-                        if j - 1 >= 0 and self.mine_board[i+1][j-1] != 'M':
-                            self.mine_board[i+1][j-1] += 1
-                        if j + 1 <= GRID_WIDTH - 1 and (
-                                self.mine_board[i+1][j+1] != 'M'):
-                            self.mine_board[i+1][j+1] += 1
-                        if self.mine_board[i+1][j] != 'M':
-                            self.mine_board[i+1][j] += 1
-                    if j - 1 >= 0 and self.mine_board[i][j-1] != 'M':
-                        self.mine_board[i][j-1] += 1
-                    if j + 1 <= GRID_WIDTH - 1 and (
-                            self.mine_board[i][j+1] != 'M'):
-                        self.mine_board[i][j+1] += 1
+    def add_hint_numbers(self, row, col):
+        """Add the hint numbers to the board.
+
+        Parameters:
+        row -- integer that denotes the row of the mine
+        col -- integer that denotes the column of the mine
+        """
+        for i in range(row-1, row+2):
+            for j in range(col-1, col+2):
+                if 0 <= i < GRID_DIMS and 0 <= j < GRID_DIMS and (
+                        (i, j) != (row, col) and self.mine_board[i][j] != 'M'):
+                    self.mine_board[i][j] += 1
 
     def cell_is_clicked(self, mouse_x_loc, mouse_y_loc):
         """Perform appropriate actions when the user left clicks a cell.
@@ -386,7 +361,7 @@ class Board:
         mouse_x_loc -- the x coordinate of the new cell on the board
         mouse_y_loc -- the y coordinate of the new cell on the board
         """
-        self.tiles[mouse_x_loc*GRID_HEIGHT + mouse_y_loc] = (
+        self.tiles[mouse_x_loc*GRID_DIMS + mouse_y_loc] = (
             Tile(mouse_y_loc*TILE_DIMS, mouse_x_loc*TILE_DIMS, self)
         )
 
