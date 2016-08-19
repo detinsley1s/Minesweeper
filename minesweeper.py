@@ -20,8 +20,9 @@ WINDOW_WIDTH = 800
 GRID_DIMS = 25
 TILE_DIMS = WINDOW_HEIGHT // GRID_DIMS
 
-# Ratio of mines to total cells
+# For calculating the total mines in the game
 MINE_RATIO = 0.16
+MINES_IN_GAME = int(GRID_DIMS**2 * MINE_RATIO)
 
 # For keeping track of the status of each individual cell
 UNCLICKED = 0
@@ -113,15 +114,11 @@ class Room(sge.dsp.Room):
         """
         # Display the screen's text
         sge.game.project_text(
-            DESCRIPTION_FONT, 'Mines', WINDOW_WIDTH - 100, 70,
+            DESCRIPTION_FONT, 'Flags\nRemaining', WINDOW_WIDTH - 100, 87,
             color=sge.gfx.Color('black'), halign='center', valign='middle'
         )
         sge.game.project_text(
-            DESCRIPTION_FONT, 'Remaining', WINDOW_WIDTH - 100, 110,
-            color=sge.gfx.Color('black'), halign='center', valign='middle'
-        )
-        sge.game.project_text(
-            MINES_LEFT_FONT, str(board.mines_left), WINDOW_WIDTH - 100, 170,
+            FLAGS_LEFT_FONT, str(board.flags_left), WINDOW_WIDTH - 100, 170,
             color=sge.gfx.Color('black'), halign='center', valign='middle'
         )
         sge.game.project_text(
@@ -205,34 +202,36 @@ class Board:
     check_for_win
     construct_cell
     display_adjacent_tiles
+    finalize_board
     game_is_lost
     game_is_won
     generate_tiles
     initialize_cell_statuses
     initialize_hidden_board
     place_mines
-    reveal_board
 
     Instance variables:
     board_is_complete -- boolean that denotes if the board is fully
                          exposed
     cell_statuses -- list of lists that denotes the cells which are
                      clicked, unclicked, or flagged
+    clicked_tiles -- integer that tracks how many tiles were clicked
     mine_board -- list of lists that denotes what is located at each
                   cell (mines, hints, or blank tiles)
-    mines_left -- integer that tracks the total mines remaining
+    flags_left -- integer that tracks the total flags remaining
     result -- string that stores the outcome of the game
     tiles -- list that contains the cell locations and sprites
     """
 
     def __init__(self):
         """Initialize the instance variables and prepare board."""
-        self.mines_left = int(GRID_DIMS**2 * MINE_RATIO)
+        self.flags_left = MINES_IN_GAME
         self.initialize_cell_statuses()
         self.initialize_hidden_board()
         self.place_mines()
         self.generate_tiles()
         self.board_is_complete = False
+        self.clicked_tiles = 0
         self.result = ''
 
     def display_adjacent_tiles(self, row, col):
@@ -245,6 +244,7 @@ class Board:
         if self.mine_board[row][col] != 'M' and (
                 self.cell_statuses[row][col] == UNCLICKED):
             self.cell_statuses[row][col] = CLICKED
+            self.clicked_tiles += 1
             self.tiles[row*GRID_DIMS + col] = (
                 Tile(col*TILE_DIMS, row*TILE_DIMS, self)
             )
@@ -255,12 +255,17 @@ class Board:
                                 (i, j) != (row, col)):
                             self.display_adjacent_tiles(i, j)
 
-    def reveal_board(self):
-        """Reveal the entire board."""
+    def finalize_board(self, status):
+        """Reveal the entire board if lost. Add skipped flags if won.
+
+        Parameter:
+        status -- Can be FLAGGED or CLICKED depending on game result.
+                  FLAGGED for a win. CLICKED for a loss.
+        """
         for row, r_val in enumerate(self.cell_statuses):
             for col, _ in enumerate(r_val):
                 if self.cell_statuses[row][col] != CLICKED:
-                    self.cell_statuses[row][col] = CLICKED
+                    self.cell_statuses[row][col] = status
                     self.tiles[row*GRID_DIMS + col] = (
                         Tile(col*TILE_DIMS, row*TILE_DIMS, self)
                     )
@@ -287,7 +292,7 @@ class Board:
 
     def place_mines(self):
         """Place the mines inside the board randomly."""
-        total_mines_to_place = self.mines_left
+        total_mines_to_place = MINES_IN_GAME
         while total_mines_to_place > 0:
             rand_x = random.choice(range(GRID_DIMS))
             rand_y = random.choice(range(GRID_DIMS))
@@ -326,6 +331,7 @@ class Board:
                 self.display_adjacent_tiles(mouse_x_loc, mouse_y_loc)
             else:
                 self.cell_statuses[mouse_x_loc][mouse_y_loc] = CLICKED
+                self.clicked_tiles += 1
             make_new_cell = True
         else:
             make_new_cell = False
@@ -342,13 +348,13 @@ class Board:
         make_new_cell -- boolean for if a new cell should be constructed
         """
         if self.cell_statuses[mouse_x_loc][mouse_y_loc] == UNCLICKED and (
-                self.mines_left > 0):
+                self.flags_left > 0):
             self.cell_statuses[mouse_x_loc][mouse_y_loc] = FLAGGED
-            self.mines_left -= 1
+            self.flags_left -= 1
             make_new_cell = True
         elif self.cell_statuses[mouse_x_loc][mouse_y_loc] == FLAGGED:
             self.cell_statuses[mouse_x_loc][mouse_y_loc] = UNCLICKED
-            self.mines_left += 1
+            self.flags_left += 1
             make_new_cell = True
         else:
             make_new_cell = False
@@ -367,20 +373,20 @@ class Board:
 
     def check_for_win(self):
         """Determine if the player won the game."""
-        if not self.board_is_complete and self.mines_left == 0 and (
-                all(x != UNCLICKED for y in self.cell_statuses for x in y)):
+        if GRID_DIMS**2 - self.clicked_tiles == MINES_IN_GAME:
             self.game_is_won()
 
     def game_is_lost(self):
         """Perform actions for when the game was lost."""
-        self.reveal_board()
-        self.mines_left = 0
+        self.finalize_board(CLICKED)
+        self.flags_left = 0
         EXPLOSION_SOUND.play()
         self.result = 'You lost!\nTry again!'
 
     def game_is_won(self):
         """Perform actions for when the game was won."""
-        self.board_is_complete = True
+        self.finalize_board(FLAGGED)
+        self.flags_left = 0
         WINNER_SOUND.play()
         self.result = 'You won!\nPlay again!'
 
@@ -400,7 +406,7 @@ Game(
 DESCRIPTION_FONT = (
     sge.gfx.Font(name='fonts/horta.ttf', size=36, underline=True)
 )
-MINES_LEFT_FONT = sge.gfx.Font(name='fonts/horta.ttf', size=60)
+FLAGS_LEFT_FONT = sge.gfx.Font(name='fonts/horta.ttf', size=60)
 INSTRUCTIONS_FONT = sge.gfx.Font(name='fonts/horta.ttf', size=18)
 GAME_OVER_FONT = sge.gfx.Font(name='fonts/horta.ttf', size=50)
 
