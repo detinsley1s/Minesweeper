@@ -291,7 +291,7 @@ class Board:
         while total_mines_to_place > 0:
             rand_x = random.choice(range(GRID_DIMS))
             rand_y = random.choice(range(GRID_DIMS))
-            if self.mine_board[rand_x][rand_y] == 0:
+            if self.mine_board[rand_x][rand_y] != 'M':
                 self.mine_board[rand_x][rand_y] = 'M'
                 total_mines_to_place -= 1
                 self.add_hint_numbers(rand_x, rand_y)
