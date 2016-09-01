@@ -68,28 +68,7 @@ class Game(sge.dsp.Game):
         button -- the identifier string of the mouse button that was
                   released
         """
-        # x, y are switched because grid coords are different from list coords
-        mouse_x_loc = int(sge.mouse.get_y() // TILE_DIMS)
-        mouse_y_loc = int(sge.mouse.get_x() // TILE_DIMS)
-
-        if not board.board_is_complete and 0 <= mouse_y_loc < GRID_DIMS and (
-                0 <= mouse_x_loc < GRID_DIMS):
-
-            # Left button is for clicking the cell
-            # Right button is for flagging the cell
-            if button == 'left':
-                make_new_cell = board.cell_is_clicked(mouse_x_loc, mouse_y_loc)
-            elif button == 'right':
-                make_new_cell = board.cell_is_flagged(mouse_x_loc, mouse_y_loc)
-            else:
-                make_new_cell = False
-
-            # Only make a new cell if it is necessary
-            if make_new_cell:
-                board.construct_cell(mouse_x_loc, mouse_y_loc)
-
-            # Check if player won
-            board.check_for_win()
+        board.process_mouse_clicks(button)
 
 
 class Room(sge.dsp.Room):
@@ -209,6 +188,7 @@ class Board:
     initialize_cell_statuses
     initialize_hidden_board
     place_mines
+    process_mouse_clicks
 
     Instance variables:
     board_is_complete -- boolean that denotes if the board is fully
@@ -313,6 +293,34 @@ class Board:
                 if 0 <= i < GRID_DIMS and 0 <= j < GRID_DIMS and (
                         (i, j) != (row, col) and self.mine_board[i][j] != 'M'):
                     self.mine_board[i][j] += 1
+
+    def process_mouse_clicks(self, button):
+        """Handle any mouse clicks and their results.
+
+        Parameters:
+        button -- the mouse button that was clicked over the cell
+        """
+        # x, y are switched because grid coords are different from list coords
+        mouse_x_loc = int(sge.mouse.get_y() // TILE_DIMS)
+        mouse_y_loc = int(sge.mouse.get_x() // TILE_DIMS)
+        if not self.board_is_complete and 0 <= mouse_y_loc < GRID_DIMS and (
+                0 <= mouse_x_loc < GRID_DIMS):
+
+            # Left button is for clicking the cell
+            # Right button is for flagging the cell
+            if button == 'left':
+                make_new_cell = self.cell_is_clicked(mouse_x_loc, mouse_y_loc)
+            elif button == 'right':
+                make_new_cell = self.cell_is_flagged(mouse_x_loc, mouse_y_loc)
+            else:
+                make_new_cell = False
+
+            # Only make a new cell if it is necessary
+            if make_new_cell:
+                self.construct_cell(mouse_x_loc, mouse_y_loc)
+
+            # Check if player won
+            self.check_for_win()
 
     def cell_is_clicked(self, mouse_x_loc, mouse_y_loc):
         """Perform appropriate actions when the user left clicks a cell.
