@@ -157,18 +157,19 @@ class Tile(sge.dsp.Object):
         row = y // TILE_DIMS
         col = x // TILE_DIMS
         if grid.cell_statuses[row][col] == UNCLICKED:
-            super().__init__(x, y, sprite=UNCLICKED_TILE_SPRITE)
+            sprite = UNCLICKED_TILE_SPRITE
         elif grid.cell_statuses[row][col] == CLICKED:
             if grid.mine_board[row][col] == 'M':
-                super().__init__(x, y, sprite=MINE_SPRITE)
+                sprite = MINE_SPRITE
             elif isinstance(grid.mine_board[row][col], int) and (
                     grid.mine_board[row][col] > 0):
                 flags_nearby = grid.mine_board[row][col]
-                super().__init__(x, y, sprite=NUMBER_TILES[flags_nearby-1])
+                sprite = NUMBER_TILES[flags_nearby-1]
             else:
-                super().__init__(x, y, sprite=CLICKED_TILE_SPRITE)
+                sprite = CLICKED_TILE_SPRITE
         else:
-            super().__init__(x, y, sprite=FLAGGED_TILE_SPRITE)
+            sprite = FLAGGED_TILE_SPRITE
+        super().__init__(x, y, sprite=sprite)
 
 
 class Board:
